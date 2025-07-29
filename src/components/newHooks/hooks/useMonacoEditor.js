@@ -1,11 +1,6 @@
 import { useRef } from "react";
 
-import type { editor } from "monaco-editor";
-
-type MonacoEditor = editor.IStandaloneCodeEditor;
-type MonacoEditorOptions = editor.IStandaloneEditorConstructionOptions;
-
-export const EDITOR_OPTIONS: MonacoEditorOptions = {
+export const EDITOR_OPTIONS = {
   minimap: { enabled: false },
   wrappingIndent: "indent",
   automaticLayout: true,
@@ -28,11 +23,9 @@ export const EDITOR_OPTIONS: MonacoEditorOptions = {
 };
 
 export function useMonacoEditor() {
-  const editorRef = useRef<MonacoEditor | null>(null);
+  const editorRef = useRef(null);
 
-  const formatEditorContent = async (
-    editor: MonacoEditor | null = editorRef.current
-  ): Promise<string | null> => {
+  const formatEditorContent = async (editor = editorRef.current) => {
     if (!editor) return null;
 
     try {
@@ -48,7 +41,7 @@ export function useMonacoEditor() {
     }
   };
 
-  const handleEditorDidMount = (editor: MonacoEditor) => {
+  const handleEditorDidMount = (editor, options = {}) => {
     if (!editor) return;
 
     editorRef.current = editor;
