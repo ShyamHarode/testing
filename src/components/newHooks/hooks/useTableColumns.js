@@ -1,13 +1,24 @@
-import Link from "next/link";
-
 import { SortAsc, SortDesc, Trash2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { deleteMessage } from "@/lib/queries/messageQueries";
 import { handleApiRequest } from "@/lib/utils";
 
-function useTableColumns({ fetchData, onLeadClick }) {
-  const deleteContactMessage = async ({ websiteId, messageId }) => {
+interface MessageData {
+  id: string;
+  websiteId: string;
+  fields: Record<string, unknown>;
+  isSuspectedSpam: boolean;
+  createdAt: string;
+}
+
+interface UseTableColumnsParams {
+  fetchData: () => void;
+  onLeadClick: (lead: MessageData) => void;
+}
+
+function useTableColumns({ fetchData, onLeadClick }: UseTableColumnsParams) {
+  const deleteContactMessage = async ({ websiteId, messageId }: { websiteId: string; messageId: string }) => {
     if (confirm("Are you sure you want to delete this message?")) {
       await handleApiRequest({
         makeRequest: async () => {
@@ -33,7 +44,7 @@ function useTableColumns({ fetchData, onLeadClick }) {
         );
 
         return row.original.isSuspectedSpam ? (
-          <span className="text-gray-500">Suspected Spam 🛑</span>
+          <span className="text-ash-500">Suspected Spam 🛑</span>
         ) : (
           <div className="underline lowercase block">{fields.email}</div>
         );
@@ -49,11 +60,11 @@ function useTableColumns({ fetchData, onLeadClick }) {
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
           >
             <span className="font-medium text-base ">Submitted</span>
-            <span className="text-gray-200 opacity-60">
+            <span className="text-ash-200 opacity-60">
               {column.getIsSorted() === "asc" ? (
-                <SortDesc className="ml-2 h-4 w-4 text-gray-500" />
+                <SortDesc className="ml-2 h-4 w-4 text-ash-500" />
               ) : (
-                <SortAsc className="ml-2 h-4 w-4 text-gray-500" />
+                <SortAsc className="ml-2 h-4 w-4 text-ash-500" />
               )}
             </span>
           </Button>
@@ -85,7 +96,7 @@ function useTableColumns({ fetchData, onLeadClick }) {
                 })
               }
             >
-              <Trash2 className="w-4 h-4 text-red-800" />
+              <Trash2 className="w-4 h-4 text-lava-800" />
             </Button>
           </div>
         );
@@ -94,4 +105,4 @@ function useTableColumns({ fetchData, onLeadClick }) {
   ];
 }
 
-export default useTableColumns;
+export default useTableColumns; 

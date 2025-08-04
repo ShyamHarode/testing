@@ -7,7 +7,7 @@ import useSWR from "swr";
 import { ACTIVE_SUBSCRIPTION_STATUSES, SubscriptionStatus } from "@/lib/constants/pricing";
 import { api, handleApiRequest } from "@/lib/utils";
 
-const fetcher = async (url) => {
+const fetcher = async (url: string) => {
   return handleApiRequest({
     makeRequest: async () => {
       const response = await api.get(url);

@@ -1,5 +1,15 @@
 import { useRef } from "react";
 
+// Minimal Monaco Editor interfaces based on actual usage
+interface MonacoAction {
+  run(): Promise<void>;
+}
+
+interface MonacoEditor {
+  getAction(actionId: string): MonacoAction | null;
+  getValue(): string;
+}
+
 export const EDITOR_OPTIONS = {
   minimap: { enabled: false },
   wrappingIndent: "indent",
@@ -20,12 +30,12 @@ export const EDITOR_OPTIONS = {
   scrollbar: {
     alwaysConsumeMouseWheel: false,
   },
-};
+} as const;
 
 export function useMonacoEditor() {
-  const editorRef = useRef(null);
+  const editorRef = useRef<MonacoEditor | null>(null);
 
-  const formatEditorContent = async (editor = editorRef.current) => {
+  const formatEditorContent = async (editor: MonacoEditor | null = editorRef.current) => {
     if (!editor) return null;
 
     try {
@@ -41,7 +51,7 @@ export function useMonacoEditor() {
     }
   };
 
-  const handleEditorDidMount = (editor, options = {}) => {
+  const handleEditorDidMount = (editor: MonacoEditor | null, options = {}) => {
     if (!editor) return;
 
     editorRef.current = editor;
