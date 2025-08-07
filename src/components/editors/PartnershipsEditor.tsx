@@ -5,6 +5,17 @@ import { LinkIcon } from "lucide-react";
 import { useFieldArray, useForm } from "react-hook-form";
 import { z } from "zod";
 
+import EditorInputField from "@/components/forms/EditorInputField";
+import EditorInputList from "@/components/forms/EditorInputList";
+import ImageUploaderForm from "@/components/forms/ImageUploaderForm";
+import { FormButtonWrapper } from "@/components/FormSubmitButton";
+import { Button } from "@/components/ui/button";
+import { Form } from "@/components/ui/form";
+import { PROMPT_TYPES } from "@/lib/ai/prompts";
+import { SECTION_TYPES } from "@/lib/constants/sections";
+import { cn, getSectionBgImageObject } from "@/lib/utils";
+import { objectImageSchema } from "@/lib/zod-schemas/image-input";
+
 // Types
 import type { Page } from "@prisma/client";
 
@@ -37,17 +48,6 @@ interface PartnershipsEditorProps {
   onSave: (data: FormData) => Promise<void>;
   page: Page;
 }
-
-import EditorInputField from "@/components/forms/EditorInputField";
-import EditorInputList from "@/components/forms/EditorInputList";
-import ImageUploaderForm from "@/components/forms/ImageUploaderForm";
-import { FormButtonWrapper } from "@/components/FormSubmitButton";
-import { Button } from "@/components/ui/button";
-import { Form } from "@/components/ui/form";
-import { PROMPT_TYPES } from "@/lib/ai/prompts";
-import { SECTION_TYPES } from "@/lib/constants/sections";
-import { cn, getSectionBgImageObject } from "@/lib/utils";
-import { objectImageSchema } from "@/lib/zod-schemas/image-input";
 
 const MAX_IMAGES = 20;
 
@@ -101,6 +101,7 @@ export default function PartnershipsEditor({ content, onSave, page }: Partnershi
   };
 
   const handleXClick = () => {
+    if (editingIndex === null) return;
     const currentField = fields[editingIndex];
 
     if (!currentField?.url) {
@@ -118,6 +119,8 @@ export default function PartnershipsEditor({ content, onSave, page }: Partnershi
           form={form}
           fieldName="header"
           label="Header"
+          className=""
+          icon={null}
           aiPrompt={{
             type: PROMPT_TYPES.HEADER_SUBHEADER,
             componentName: "Header",
@@ -129,6 +132,8 @@ export default function PartnershipsEditor({ content, onSave, page }: Partnershi
           form={form}
           fieldName="subheader"
           label="Subheader"
+          className=""
+          icon={null}
           aiPrompt={{
             type: PROMPT_TYPES.HEADER_SUBHEADER,
             componentName: "Subheader",
@@ -138,13 +143,13 @@ export default function PartnershipsEditor({ content, onSave, page }: Partnershi
         />
         <EditorInputList
           fields={fields}
-          editingIndex={editingIndex}
+          editingIndex={editingIndex as null | undefined}
           setEditingIndex={setEditingIndex}
           remove={remove}
           listName="Images"
           onSortEnd={handleSortEnd}
-          allowDelete={shouldShowDelete}
-          isDraggingDisabled={editingIndex !== undefined}
+          allowDelete={true}
+          handleVisibility={() => {}}
           renderDisplay={(field: PartnershipImage) => {
             return (
               <div className="flex items-center flex-col gap-2 border-ash-200 border p-3 rounded-md">
@@ -168,7 +173,14 @@ export default function PartnershipsEditor({ content, onSave, page }: Partnershi
                 form={form}
                 onGalleryImagesSelectFinished={() => {}}
               />
-              <EditorInputField form={form} fieldName={`images.${index}.externalLink`} label="External Link" />
+              <EditorInputField
+                form={form}
+                fieldName={`images.${index}.externalLink`}
+                label="External Link"
+                className=""
+                icon={null}
+                aiPrompt=""
+              />
             </>
           )}
           onXClick={handleXClick}

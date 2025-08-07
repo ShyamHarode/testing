@@ -4,6 +4,16 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useFieldArray, useForm } from "react-hook-form";
 import { z } from "zod";
 
+import EditorInputField from "@/components/forms/EditorInputField";
+import EditorInputList from "@/components/forms/EditorInputList";
+import { FormButtonWrapper } from "@/components/FormSubmitButton";
+import { Button } from "@/components/ui/button";
+import { Form, FormControl, FormDescription, FormField, FormLabel } from "@/components/ui/form";
+import { Switch } from "@/components/ui/switch";
+import { PROMPT_TYPES } from "@/lib/ai/prompts";
+import { SECTION_TYPES } from "@/lib/constants/sections";
+import { cn } from "@/lib/utils";
+
 // Types
 import type { Page } from "@prisma/client";
 
@@ -17,6 +27,7 @@ interface Offer {
 
 interface FormData {
   header: string;
+  subheader?: string;
   offers: Offer[];
   isGlobal?: boolean;
 }
@@ -30,19 +41,9 @@ interface Content {
 
 interface OffersEditorProps {
   content: Content;
-  onSave: (data: FormData, options?: { isGlobal?: boolean; sectionType?: string }) => Promise<void>;
+  onSave: (_data: FormData, _options?: { isGlobal?: boolean; sectionType?: string }) => Promise<void>;
   page: Page;
 }
-
-import EditorInputField from "@/components/forms/EditorInputField";
-import EditorInputList from "@/components/forms/EditorInputList";
-import { FormButtonWrapper } from "@/components/FormSubmitButton";
-import { Button } from "@/components/ui/button";
-import { Form, FormControl, FormDescription, FormField, FormLabel } from "@/components/ui/form";
-import { Switch } from "@/components/ui/switch";
-import { PROMPT_TYPES } from "@/lib/ai/prompts";
-import { SECTION_TYPES } from "@/lib/constants/sections";
-import { cn } from "@/lib/utils";
 
 const validationSchema = z.object({
   header: z.string().min(1, "Header is required"),
@@ -59,7 +60,7 @@ const validationSchema = z.object({
 });
 
 export default function OffersEditor({ content, onSave, page }: OffersEditorProps) {
-  const [editingIndex, setEditingIndex] = useState<number | undefined>();
+  const [editingIndex, setEditingIndex] = useState<number | null>(null);
 
   const form = useForm<FormData>({
     resolver: zodResolver(validationSchema),
@@ -100,6 +101,8 @@ export default function OffersEditor({ content, onSave, page }: OffersEditorProp
           form={form}
           fieldName="header"
           label="Header"
+          className=""
+          icon={null}
           aiPrompt={{
             type: PROMPT_TYPES.HEADER_SUBHEADER,
             componentName: "Header",
@@ -132,17 +135,18 @@ export default function OffersEditor({ content, onSave, page }: OffersEditorProp
 
         <EditorInputList
           fields={fields}
-          editingIndex={editingIndex}
+          editingIndex={editingIndex as null | undefined}
           setEditingIndex={setEditingIndex}
           remove={remove}
           onXClick={() => {
-            if (!fields[editingIndex]?.title) {
+            if (editingIndex !== null && !fields[editingIndex]?.title) {
               remove(editingIndex);
             }
             setEditingIndex(null);
           }}
           listName="Offers"
           onSortEnd={handleSortEnd}
+          handleVisibility={() => {}}
           renderDisplay={(field: Offer) => (
             <div className="flex flex-col gap-2 border-ash-200 border p-3 rounded-md">
               <div className="flex flex-col gap-1">
@@ -159,6 +163,8 @@ export default function OffersEditor({ content, onSave, page }: OffersEditorProp
                 form={form}
                 fieldName={`offers.${index}.title`}
                 label="Title"
+                className=""
+                icon={null}
                 aiPrompt={{
                   type: PROMPT_TYPES.OFFERS,
                   description: form.watch(`offers.${index}.description`),
@@ -173,6 +179,8 @@ export default function OffersEditor({ content, onSave, page }: OffersEditorProp
                 fieldName={`offers.${index}.description`}
                 label="Description"
                 type="textarea"
+                className=""
+                icon={null}
                 aiPrompt={{
                   type: PROMPT_TYPES.OFFERS,
                   title: form.watch(`offers.${index}.title`),
@@ -186,6 +194,8 @@ export default function OffersEditor({ content, onSave, page }: OffersEditorProp
                 form={form}
                 fieldName={`offers.${index}.amount`}
                 label="Discount"
+                className=""
+                icon={null}
                 aiPrompt={{
                   type: PROMPT_TYPES.OFFERS,
                   title: form.watch(`offers.${index}.title`),
@@ -201,6 +211,9 @@ export default function OffersEditor({ content, onSave, page }: OffersEditorProp
                 placeholder="VIP25"
                 fieldName={`offers.${index}.discountCode`}
                 label="Discount code emailed to user"
+                className=""
+                icon={null}
+                aiPrompt=""
               />
 
               <div>
@@ -242,6 +255,9 @@ export default function OffersEditor({ content, onSave, page }: OffersEditorProp
           onClick={() => {
             append({
               title: "Untitled",
+              description: "",
+              amount: "",
+              discountCode: "",
             });
             setEditingIndex(fields.length);
           }}
