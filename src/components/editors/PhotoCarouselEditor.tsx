@@ -5,6 +5,17 @@ import { useFieldArray, useForm } from "react-hook-form";
 import toast from "react-hot-toast";
 import { z } from "zod";
 
+import EditorInputField from "@/components/forms/EditorInputField";
+import EditorInputList from "@/components/forms/EditorInputList";
+import ImageUploaderForm from "@/components/forms/ImageUploaderForm";
+import { FormButtonWrapper } from "@/components/FormSubmitButton";
+import { Button } from "@/components/ui/button";
+import { Form } from "@/components/ui/form";
+import { PROMPT_TYPES } from "@/lib/ai/prompts";
+import { SECTION_TYPES } from "@/lib/constants/sections";
+import { api, cn, getSectionBgImageObject, handleApiRequest } from "@/lib/utils";
+import { imageInputSchema } from "@/lib/zod-schemas/image-input";
+
 // Types
 import type { Page } from "@prisma/client";
 
@@ -19,6 +30,8 @@ interface CarouselImage {
   imageUrl: ImageObject | string;
   altText?: string;
 }
+
+type CarouselImageField = CarouselImage & { id: string };
 
 interface FormData {
   header?: string;
@@ -36,20 +49,9 @@ interface Content {
 
 interface PhotoCarouselEditorProps {
   content: Content;
-  onSave: (data: FormData) => Promise<void>;
+  onSave: (_: FormData) => Promise<void>;
   page: Page;
 }
-
-import EditorInputField from "@/components/forms/EditorInputField";
-import EditorInputList from "@/components/forms/EditorInputList";
-import ImageUploaderForm from "@/components/forms/ImageUploaderForm";
-import { FormButtonWrapper } from "@/components/FormSubmitButton";
-import { Button } from "@/components/ui/button";
-import { Form } from "@/components/ui/form";
-import { PROMPT_TYPES } from "@/lib/ai/prompts";
-import { SECTION_TYPES } from "@/lib/constants/sections";
-import { api, cn, getSectionBgImageObject, handleApiRequest } from "@/lib/utils";
-import { imageInputSchema } from "@/lib/zod-schemas/image-input";
 
 const MAX_IMAGES = 50;
 
@@ -87,7 +89,7 @@ export default function PhotoCarouselEditor({ content, onSave, page }: PhotoCaro
       ...data,
       images: data.images.map((image) => ({
         ...image,
-        imageUrl: typeof image.imageUrl === "string" ? image.imageUrl : image.imageUrl?.url ?? "",
+        imageUrl: typeof image.imageUrl === "string" ? image.imageUrl : (image.imageUrl?.url ?? ""),
       })),
     };
     await onSave(dataToSave);
@@ -101,22 +103,21 @@ export default function PhotoCarouselEditor({ content, onSave, page }: PhotoCaro
   });
 
   const canAddImage = fields.length < MAX_IMAGES;
-  const shouldShowDelete = (field: CarouselImage) => {
-    const validItemsCount = fields.filter((f) => f.imageUrl).length;
-    return validItemsCount > 1 && field.imageUrl;
-  };
 
-  const handleSortEnd = (newItems: CarouselImage[]) => {
-    form.setValue("images", newItems, { shouldDirty: true });
+  const handleSortEnd = (newItems: CarouselImageField[]) => {
+    const withoutIds = newItems.map(({ id: _, ...rest }) => rest);
+    form.setValue("images", withoutIds, { shouldDirty: true });
   };
 
   const handleXClick = () => {
+    if (editingIndex === null) return;
     const currentField = fields[editingIndex];
 
     if (!currentField?.imageUrl) {
       remove(editingIndex);
     } else {
-      form.setValue(`images.${editingIndex}`, currentField, { shouldDirty: false });
+      const { id: _, ...rest } = currentField as CarouselImageField;
+      form.setValue(`images.${editingIndex}`, rest, { shouldDirty: false });
     }
     setEditingIndex(null);
   };
@@ -141,7 +142,10 @@ export default function PhotoCarouselEditor({ content, onSave, page }: PhotoCaro
     return altText;
   };
 
-  const handleGalleryImagesSelectFinished = async (galleryImages: string[] | Array<{url: string; altText?: string}>, listIdx?: number) => {
+  const handleGalleryImagesSelectFinished = async (
+    galleryImages: string[] | Array<{ url: string; altText?: string }>,
+    listIdx?: number
+  ) => {
     const isQuickAdder = listIdx === undefined;
 
     if (fields.length >= MAX_IMAGES && isQuickAdder) {
@@ -163,7 +167,9 @@ export default function PhotoCarouselEditor({ content, onSave, page }: PhotoCaro
       return image;
     });
 
-    const altTexts = await Promise.all(formattedGalleryImages.map((image) => generateAltText(image.url, listIdx)));
+    const altTexts = await Promise.all(
+      formattedGalleryImages.map((image, index) => generateAltText(image.url, listIdx ?? index))
+    );
     if (isQuickAdder) {
       formattedGalleryImages.forEach((image, index) => {
         append({ imageUrl: getSectionBgImageObject(image.url), altText: altTexts[index] });
@@ -199,34 +205,43 @@ export default function PhotoCarouselEditor({ content, onSave, page }: PhotoCaro
           form={form}
           fieldName={"selectedImages"}
           isGallery={true}
-          onSuccess={(result: { urls: string[] }, section?: string) => {
-            if (section === "dragger") {
-              handleGalleryImagesSelectFinished(result.urls);
-            }
-          }}
+          onSuccess={
+            ((result: { urls: string[] }, section?: string) => {
+              if (section === "dragger") {
+                void handleGalleryImagesSelectFinished(result.urls);
+              }
+            }) as unknown as () => void
+          }
         />
-        <EditorInputList
-          fields={fields}
+        <EditorInputList<CarouselImageField>
+          fields={fields as unknown as CarouselImageField[]}
           editingIndex={editingIndex}
           setEditingIndex={setEditingIndex}
           remove={remove}
           listName="Images"
           onSortEnd={handleSortEnd}
-          allowDelete={shouldShowDelete}
-          isDraggingDisabled={editingIndex !== undefined}
-          renderDisplay={(field: CarouselImage) => (
+          allowDelete
+          renderDisplay={(field) => (
             <div className="flex items-center flex-col gap-2 border-ash-200 border p-3 rounded-md">
-              <img src={typeof field.imageUrl === "string" ? field.imageUrl : field.imageUrl?.url} alt={field.altText || ""} className="w-20 h-20 object-cover rounded" />
+              <img
+                src={typeof field.imageUrl === "string" ? field.imageUrl : field.imageUrl?.url}
+                alt={field.altText || ""}
+                className="w-20 h-20 object-cover rounded"
+              />
               <p className="text-sm text-ash-500">{field.altText}</p>
             </div>
           )}
-          renderEdit={(field: CarouselImage, index: number) => (
+          renderEdit={(_field, index) => (
             <>
               <ImageUploaderForm
                 key={`image-uploader-${index}`}
                 label="Update image"
                 fieldName={`images.${index}.imageUrl`}
-                onSuccess={(result: { urls: string[] }) => handleGalleryImagesSelectFinished(result.urls, index)}
+                onSuccess={
+                  ((result: { urls: string[] }) => {
+                    void handleGalleryImagesSelectFinished(result.urls, index);
+                  }) as unknown as () => void
+                }
                 form={form}
                 onGalleryImagesSelectFinished={() => {}}
               />

@@ -1,41 +1,38 @@
-import { useState } from "react";
-
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
+import EditorInputField from "@/components/forms/EditorInputField";
+import RichTextarea from "@/components/forms/RichTextarea";
+import { FormButtonWrapper } from "@/components/FormSubmitButton";
 import { Form } from "@/components/ui/form";
 import { PROMPT_TYPES } from "@/lib/ai/prompts";
 import { SECTION_TYPES } from "@/lib/constants/sections";
-import EditorInputField from "../forms/EditorInputField";
-import { FormButtonWrapper } from "../FormSubmitButton";
 
 const validationSchema = z.object({
   header: z.string().min(1, "Header is required"),
-  subheader: z.string().nullable(),
+  freeform: z.string().min(1, "About field is required"),
 });
 
-export default function TextEditor({ content, onSave, page }) {
-  const [editingIndex, setEditingIndex] = useState();
+export default function AboutFreeFormEditor({ content, onSave, page }) {
+  const defaultValues = {
+    header: content.header,
+    freeform: content.freeform,
+  };
+
   const form = useForm({
     resolver: zodResolver(validationSchema),
-    defaultValues: {
-      header: content.header,
-      subheader: content.subheader,
-    },
+    defaultValues,
   });
-
-  const { handleSubmit } = form;
 
   const onFormSubmit = async (data) => {
     await onSave(data);
     form.reset(data);
-    setEditingIndex(null);
   };
 
   return (
     <Form {...form}>
-      <form onSubmit={handleSubmit(onFormSubmit)} className="pb-12 overflow-auto">
+      <form onSubmit={form.handleSubmit(onFormSubmit)}>
         <EditorInputField
           form={form}
           fieldName="header"
@@ -43,22 +40,22 @@ export default function TextEditor({ content, onSave, page }) {
           aiPrompt={{
             type: PROMPT_TYPES.HEADER_SUBHEADER,
             componentName: "Header",
-            sectionName: SECTION_TYPES.TEXT,
+            sectionName: SECTION_TYPES.ABOUT_FREE_FORM,
             page,
           }}
         />
 
-        <EditorInputField
+        <RichTextarea
+          fieldName={"freeform"}
+          label={"About"}
           form={form}
-          fieldName="subheader"
-          label="Subheader"
-          type="textarea"
           aiPrompt={{
-            type: PROMPT_TYPES.HEADER_SUBHEADER,
-            componentName: "Subheader",
-            sectionName: SECTION_TYPES.TEXT,
+            type: PROMPT_TYPES.FREEFORM,
+            componentName: "About",
+            sectionName: SECTION_TYPES.ABOUT_FREE_FORM,
             page,
           }}
+          editorContentClassName="max-h-[350px] overflow-y-scroll"
         />
 
         <FormButtonWrapper form={form} />

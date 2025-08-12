@@ -9,23 +9,39 @@ import { Form } from "@/components/ui/form";
 import { PROMPT_TYPES } from "@/lib/ai/prompts";
 import { SECTION_TYPES } from "@/lib/constants/sections";
 
+// Types
+import type { Page } from "@prisma/client";
+
 const validationSchema = z.object({
   header: z.string().min(1, "Header is required"),
   history: z.string().min(1, "Details is required"),
 });
 
-export default function ServiceDetailsEditor({ content, onSave, page }) {
-  const defaultValues = {
+type FormData = z.infer<typeof validationSchema>;
+
+interface Content {
+  header?: string;
+  history?: string;
+}
+
+interface ServiceDetailsEditorProps {
+  content: Content;
+  onSave: (data: FormData) => Promise<void>;
+  page: Page;
+}
+
+export default function ServiceDetailsEditor({ content, onSave, page }: ServiceDetailsEditorProps) {
+  const defaultValues: Partial<FormData> = {
     header: content.header,
     history: content.history,
   };
 
-  const form = useForm({
+  const form = useForm<FormData>({
     resolver: zodResolver(validationSchema),
     defaultValues,
   });
 
-  const onFormSubmit = async (data) => {
+  const onFormSubmit = async (data: FormData) => {
     await onSave(data);
     form.reset(data);
   };

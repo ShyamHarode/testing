@@ -15,7 +15,10 @@ import { PROMPT_TYPES } from "@/lib/ai/prompts";
 import BUTTON_TYPES from "@/lib/constants/buttonTypes";
 import { SECTION_TYPES } from "@/lib/constants/sections";
 import { cn, getSectionBgImageObject } from "@/lib/utils";
-import { imageInputSchema } from "../../lib/zod-schemas/image-input";
+import { imageInputSchema } from "@/lib/zod-schemas/image-input";
+
+// Types
+import type { Page } from "@prisma/client";
 
 const validationSchema = z.object({
   header: z.string().min(1, "Header is required"),
@@ -33,11 +36,36 @@ const validationSchema = z.object({
     .optional(),
 });
 
-export default function ServiceAreaHeroEditor({ content, onSave, page, pages }) {
-  const maxButtons = 2;
-  const [editingIndex, setEditingIndex] = useState();
+type FormData = z.infer<typeof validationSchema>;
 
-  const form = useForm({
+type ButtonType = (typeof BUTTON_TYPES)[keyof typeof BUTTON_TYPES];
+
+interface ButtonItem {
+  type: ButtonType;
+  label: string;
+  link: string;
+}
+
+interface Content {
+  header?: string;
+  subheader?: string;
+  bgImage?: string;
+  showCustomButtons?: boolean;
+  buttons?: ButtonItem[];
+}
+
+interface ServiceAreaHeroEditorProps {
+  content: Content;
+  onSave: (data: FormData) => Promise<void>;
+  page: Page;
+  pages: Page[];
+}
+
+export default function ServiceAreaHeroEditor({ content, onSave, page, pages }: ServiceAreaHeroEditorProps) {
+  const maxButtons = 2;
+  const [editingIndex, setEditingIndex] = useState<number | null>(null);
+
+  const form = useForm<FormData>({
     resolver: zodResolver(validationSchema),
     defaultValues: {
       header: content.header,
@@ -50,7 +78,7 @@ export default function ServiceAreaHeroEditor({ content, onSave, page, pages }) 
 
   const { control, handleSubmit } = form;
 
-  const onFormSubmit = async (data) => {
+  const onFormSubmit = async (data: FormData) => {
     await onSave(data);
     form.reset(data);
     setEditingIndex(null);

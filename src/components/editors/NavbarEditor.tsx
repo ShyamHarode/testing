@@ -33,16 +33,7 @@ import type { BlogPost, Conversion, Page, Project, Review, Service, ServiceArea 
 
 interface NavbarItem {
   id: string;
-  type:
-    | "services"
-    | "projects"
-    | "blogPosts"
-    | "reviews"
-    | "conversions"
-    | "page"
-    | "legal"
-    | "areasServed"
-    | "external";
+  type: string;
   visible: boolean;
   order: number;
   pageId?: string;
@@ -75,7 +66,7 @@ interface NavbarEditorProps {
       isDarkMode?: boolean;
     };
   };
-  onSave: (_updatedFields: {
+  onSave: (_: {
     logo: string;
     navbar: {
       isCustomNav: boolean;
@@ -92,15 +83,15 @@ interface NavbarEditorProps {
 
 interface AddItemDialogProps {
   isOpen: boolean;
-  setIsOpen: (_isOpen: boolean) => void;
+  setIsOpen: (_: boolean) => void;
   onSelectPage: () => void;
   onSelectExternalLink: () => void;
 }
 
 interface ExternalLinkDialogProps {
   isOpen: boolean;
-  setIsOpen: (_isOpen: boolean) => void;
-  onSave: (_data: { text: string; url: string }) => void;
+  setIsOpen: (_: boolean) => void;
+  onSave: (_: { text: string; url: string }) => void;
 }
 
 // Items that are hidden by default
@@ -122,17 +113,7 @@ const validationSchema = z.object({
   items: z.array(
     z.object({
       id: z.string(),
-      type: z.enum([
-        "services",
-        "projects",
-        "blogPosts",
-        "reviews",
-        "conversions",
-        "page",
-        "legal",
-        "areasServed",
-        "external",
-      ]),
+      type: z.string(),
       visible: z.boolean(),
       order: z.number(),
       pageId: z.string().optional(),
@@ -187,7 +168,7 @@ const processItems = (website: NavbarEditorProps["website"]) => {
         const groupInfo = serviceGroup[0].groupInfo as unknown as { key: string; name: string };
         return {
           id: groupInfo?.key || "general",
-          type: "services" as const,
+          type: "services",
           visible: true,
           order: 1,
           groupName: groupInfo?.name || "General",
@@ -195,28 +176,28 @@ const processItems = (website: NavbarEditorProps["website"]) => {
         };
       })
       .filter(Boolean),
-    { type: "projects" as const, visible: projects.length > 0, id: "projects", order: 1 },
-    { type: "blogPosts" as const, visible: blogPosts.length > 0, id: "blogPosts", order: 1 },
-    { type: "reviews" as const, visible: (reviews.length || 0) > MIN_REVIEWS, id: "reviews", order: 1 },
-    { type: "areasServed" as const, visible: areasServed.length > 0, id: "areasServed", order: 1 },
+    { type: "projects", visible: projects.length > 0, id: "projects", order: 1 },
+    { type: "blogPosts", visible: blogPosts.length > 0, id: "blogPosts", order: 1 },
+    { type: "reviews", visible: (reviews.length || 0) > MIN_REVIEWS, id: "reviews", order: 1 },
+    { type: "areasServed", visible: areasServed.length > 0, id: "areasServed", order: 1 },
     ...general.map((page) => ({
       id: page.id,
-      type: "page" as const,
+      type: "page",
       pageId: page.id,
       visible: true,
       order: 1,
     })),
     ...legal.map((page) => ({
       id: page.id,
-      type: "legal" as const,
+      type: "legal",
       pageId: page.id,
       visible: true,
       order: 1,
     })),
-    { type: "conversions" as const, visible: conversions.length > 0, id: "conversions", order: 1 },
+    { type: "conversions", visible: conversions.length > 0, id: "conversions", order: 1 },
     ...externalLinks.map((link) => ({
       id: link.id,
-      type: "external" as const,
+      type: "external",
       text: link.text,
       url: link.url,
       visible: link.visible ?? true,
@@ -364,7 +345,7 @@ export default function NavbarEditor({ website, onSave, content }: NavbarEditorP
     form.reset({ ...updatedFields.navbar, logo: data.logo ?? getSectionBgImageObject(website?.logo) });
   };
 
-  const [editingIndex, setEditingIndex] = useState(null);
+  const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [dialogState, setDialogState] = useState({
     [ADD_ITEM_DIALOG_ID]: false,
     [PAGE_ADDER_DIALOG_ID]: false,

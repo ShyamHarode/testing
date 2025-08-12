@@ -11,21 +11,37 @@ import { Button } from "@/components/ui/button";
 import { PROMPT_TYPES } from "@/lib/ai/prompts";
 import { SECTION_TYPES } from "@/lib/constants/sections";
 
-const validationSchema = z.object({
-  header: z.string().min(1, "Header is required"),
-  benefits: z
-    .array(
-      z.object({
-        title: z.string().min(1, "Title is required"),
-        description: z.string().min(1, "Description is required"),
-      })
-    )
-    .optional(),
+// Types
+import type { Page } from "@prisma/client";
+
+const benefitSchema = z.object({
+  title: z.string().min(1, "Title is required"),
+  description: z.string().min(1, "Description is required"),
 });
 
-export default function ServiceBenefitsEditor({ content, onSave, page }) {
-  const [editingIndex, setEditingIndex] = useState();
-  const form = useForm({
+const validationSchema = z.object({
+  header: z.string().min(1, "Header is required"),
+  benefits: z.array(benefitSchema).optional(),
+});
+
+type Benefit = z.infer<typeof benefitSchema>;
+type BenefitField = Benefit & { id: string };
+type FormData = z.infer<typeof validationSchema>;
+
+interface Content {
+  header?: string;
+  benefits?: Benefit[];
+}
+
+interface ServiceBenefitsEditorProps {
+  content: Content;
+  onSave: (data: FormData) => Promise<void>;
+  page: Page;
+}
+
+export default function ServiceBenefitsEditor({ content, onSave, page }: ServiceBenefitsEditorProps) {
+  const [editingIndex, setEditingIndex] = useState<number | null>(null);
+  const form = useForm<FormData>({
     resolver: zodResolver(validationSchema),
     defaultValues: {
       header: content.header,
@@ -33,7 +49,7 @@ export default function ServiceBenefitsEditor({ content, onSave, page }) {
     },
   });
 
-  const onFormSubmit = async (data) => {
+  const onFormSubmit = async (data: FormData) => {
     await onSave(data);
     form.reset(data);
     setEditingIndex(null);
@@ -41,13 +57,14 @@ export default function ServiceBenefitsEditor({ content, onSave, page }) {
 
   const { control, handleSubmit } = form;
 
-  const { fields, append, remove } = useFieldArray({
+  const { fields, append, remove } = useFieldArray<FormData, "benefits">({
     control,
     name: "benefits",
   });
 
-  const handleSortEnd = (newItems) => {
-    form.setValue("benefits", newItems, { shouldDirty: true });
+  const handleSortEnd = (newItems: BenefitField[]) => {
+    const withoutIds: Benefit[] = newItems.map(({ id: _, ...rest }) => rest);
+    form.setValue("benefits", withoutIds, { shouldDirty: true });
   };
 
   return (
@@ -64,15 +81,15 @@ export default function ServiceBenefitsEditor({ content, onSave, page }) {
         }}
       />
 
-      <EditorInputList
-        fields={fields}
+      <EditorInputList<BenefitField>
+        fields={fields as unknown as BenefitField[]}
         editingIndex={editingIndex}
         setEditingIndex={setEditingIndex}
         remove={remove}
         listName="Service benefits"
         onSortEnd={handleSortEnd}
         onXClick={() => {
-          if (!fields[editingIndex]?.title) {
+          if (editingIndex !== null && !fields[editingIndex]?.title) {
             remove(editingIndex);
           }
           setEditingIndex(null);
@@ -85,7 +102,7 @@ export default function ServiceBenefitsEditor({ content, onSave, page }) {
             </div>
           </div>
         )}
-        renderEdit={(_, index) => (
+        renderEdit={(_field, index) => (
           <>
             <EditorInputField
               condense
@@ -126,7 +143,7 @@ export default function ServiceBenefitsEditor({ content, onSave, page }) {
         onClick={() => {
           append({
             title: "Untitled",
-          });
+          } as Benefit);
           setEditingIndex(fields.length);
         }}
       >

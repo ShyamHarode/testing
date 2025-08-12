@@ -27,6 +27,8 @@ interface PartnershipImage {
   source?: string;
 }
 
+type PartnershipImageField = PartnershipImage & { id: string };
+
 interface FormData {
   header?: string;
   subheader?: string;
@@ -96,8 +98,9 @@ export default function PartnershipsEditor({ content, onSave, page }: Partnershi
     return validItemsCount > 1 && field.url;
   };
 
-  const handleSortEnd = (newItems: PartnershipImage[]) => {
-    form.setValue("images", newItems, { shouldDirty: true });
+  const handleSortEnd = (newItems: PartnershipImageField[]) => {
+    const withoutIds = newItems.map(({ id: _ignoredId, ...rest }) => rest);
+    form.setValue("images", withoutIds, { shouldDirty: true });
   };
 
   const handleXClick = () => {
@@ -141,16 +144,16 @@ export default function PartnershipsEditor({ content, onSave, page }: Partnershi
             page,
           }}
         />
-        <EditorInputList
+        <EditorInputList<PartnershipImageField>
           fields={fields}
-          editingIndex={editingIndex as null | undefined}
+          editingIndex={editingIndex}
           setEditingIndex={setEditingIndex}
           remove={remove}
           listName="Images"
           onSortEnd={handleSortEnd}
           allowDelete={true}
           handleVisibility={() => {}}
-          renderDisplay={(field: PartnershipImage) => {
+          renderDisplay={(field) => {
             return (
               <div className="flex items-center flex-col gap-2 border-ash-200 border p-3 rounded-md">
                 <img src={field?.url} alt={field.alt || ""} className="w-20 h-20 object-cover rounded" />
@@ -164,7 +167,7 @@ export default function PartnershipsEditor({ content, onSave, page }: Partnershi
               </div>
             );
           }}
-          renderEdit={(field: PartnershipImage, index: number) => (
+          renderEdit={(field, index) => (
             <>
               <ImageUploaderForm
                 key={`image-uploader-${index}`}

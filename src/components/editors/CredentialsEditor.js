@@ -5,39 +5,6 @@ import { LinkIcon } from "lucide-react";
 import { useFieldArray, useForm } from "react-hook-form";
 import { z } from "zod";
 
-// Types
-import type { Page } from "@prisma/client";
-
-interface PartnershipImage {
-  url: string;
-  alt?: string;
-  externalLink?: string;
-  providerId?: string;
-  source?: string;
-}
-
-interface FormData {
-  header?: string;
-  subheader?: string;
-  images: PartnershipImage[];
-}
-
-interface Content {
-  header?: string;
-  subheader?: string;
-  images?: Array<{
-    url: string;
-    externalLink?: string;
-    alt?: string;
-  }>;
-}
-
-interface PartnershipsEditorProps {
-  content: Content;
-  onSave: (data: FormData) => Promise<void>;
-  page: Page;
-}
-
 import EditorInputField from "@/components/forms/EditorInputField";
 import EditorInputList from "@/components/forms/EditorInputList";
 import ImageUploaderForm from "@/components/forms/ImageUploaderForm";
@@ -49,10 +16,10 @@ import { SECTION_TYPES } from "@/lib/constants/sections";
 import { cn, getSectionBgImageObject } from "@/lib/utils";
 import { objectImageSchema } from "@/lib/zod-schemas/image-input";
 
-const MAX_IMAGES = 20;
+const MAX_IMAGES = 4;
 
 const validationSchema = z.object({
-  header: z.string().optional(),
+  header: z.string().min(1, "Header is required"),
   subheader: z.string().optional(),
   images: z
     .array(
@@ -63,10 +30,10 @@ const validationSchema = z.object({
     .min(1, "At least one image is required"),
 });
 
-export default function PartnershipsEditor({ content, onSave, page }: PartnershipsEditorProps) {
-  const [editingIndex, setEditingIndex] = useState<number | null>(null);
+export default function CredentialsEditor({ content, onSave, page }) {
+  const [editingIndex, setEditingIndex] = useState(null);
 
-  const form = useForm<FormData>({
+  const form = useForm({
     resolver: zodResolver(validationSchema),
     defaultValues: {
       header: content.header,
@@ -79,7 +46,7 @@ export default function PartnershipsEditor({ content, onSave, page }: Partnershi
     },
   });
 
-  const onFormSubmit = async (data: FormData) => {
+  const onFormSubmit = async (data) => {
     await onSave(data);
     form.reset(data);
     setEditingIndex(null);
@@ -91,12 +58,12 @@ export default function PartnershipsEditor({ content, onSave, page }: Partnershi
   });
 
   const canAddImage = fields.length < MAX_IMAGES;
-  const shouldShowDelete = (field: PartnershipImage) => {
+  const shouldShowDelete = (field) => {
     const validItemsCount = fields.filter((f) => f.url).length;
     return validItemsCount > 1 && field.url;
   };
 
-  const handleSortEnd = (newItems: PartnershipImage[]) => {
+  const handleSortEnd = (newItems) => {
     form.setValue("images", newItems, { shouldDirty: true });
   };
 
@@ -121,7 +88,7 @@ export default function PartnershipsEditor({ content, onSave, page }: Partnershi
           aiPrompt={{
             type: PROMPT_TYPES.HEADER_SUBHEADER,
             componentName: "Header",
-            sectionName: SECTION_TYPES.PARTNERSHIPS,
+            sectionName: SECTION_TYPES.CREDENTIALS,
             page,
           }}
         />
@@ -132,7 +99,7 @@ export default function PartnershipsEditor({ content, onSave, page }: Partnershi
           aiPrompt={{
             type: PROMPT_TYPES.HEADER_SUBHEADER,
             componentName: "Subheader",
-            sectionName: SECTION_TYPES.PARTNERSHIPS,
+            sectionName: SECTION_TYPES.CREDENTIALS,
             page,
           }}
         />
@@ -145,7 +112,7 @@ export default function PartnershipsEditor({ content, onSave, page }: Partnershi
           onSortEnd={handleSortEnd}
           allowDelete={shouldShowDelete}
           isDraggingDisabled={editingIndex !== undefined}
-          renderDisplay={(field: PartnershipImage) => {
+          renderDisplay={(field) => {
             return (
               <div className="flex items-center flex-col gap-2 border-ash-200 border p-3 rounded-md">
                 <img src={field?.url} alt={field.alt || ""} className="w-20 h-20 object-cover rounded" />
@@ -159,14 +126,13 @@ export default function PartnershipsEditor({ content, onSave, page }: Partnershi
               </div>
             );
           }}
-          renderEdit={(field: PartnershipImage, index: number) => (
+          renderEdit={(field, index) => (
             <>
               <ImageUploaderForm
                 key={`image-uploader-${index}`}
                 label="Update image"
                 fieldName={`images.${index}`}
                 form={form}
-                onGalleryImagesSelectFinished={() => {}}
               />
               <EditorInputField form={form} fieldName={`images.${index}.externalLink`} label="External Link" />
             </>
@@ -186,7 +152,7 @@ export default function PartnershipsEditor({ content, onSave, page }: Partnershi
             }
           }}
         >
-          {canAddImage ? "+ Add Partnership" : `Only ${MAX_IMAGES} partnerships allowed`}
+          {canAddImage ? "+ Add Credential" : `Only ${MAX_IMAGES} credentials allowed`}
         </Button>
 
         <FormButtonWrapper form={form} />

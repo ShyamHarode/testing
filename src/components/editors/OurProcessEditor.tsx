@@ -31,6 +31,8 @@ interface Step {
   icon?: StepIcon;
 }
 
+type StepField = Step & { id: string };
+
 interface FormData {
   header: string;
   subheader?: string;
@@ -97,8 +99,9 @@ export default function OurProcessEditor({ content, onSave, page }: OurProcessEd
   const canAddStep = fields.length < 4;
   const canRemoveStep = fields.length > 1;
 
-  const handleSortEnd = (newItems: Step[]) => {
-    form.setValue("steps", newItems, { shouldDirty: true });
+  const handleSortEnd = (newItems: StepField[]) => {
+    const withoutIds = newItems.map(({ id: _ignoredId, ...rest }) => rest);
+    form.setValue("steps", withoutIds, { shouldDirty: true });
   };
 
   return (
@@ -130,9 +133,9 @@ export default function OurProcessEditor({ content, onSave, page }: OurProcessEd
             page,
           }}
         />
-        <EditorInputList
+        <EditorInputList<StepField>
           fields={fields}
-          editingIndex={editingIndex as null | undefined}
+          editingIndex={editingIndex}
           setEditingIndex={setEditingIndex}
           allowDelete={canRemoveStep}
           remove={remove}
@@ -140,7 +143,7 @@ export default function OurProcessEditor({ content, onSave, page }: OurProcessEd
           onSortEnd={handleSortEnd}
           onXClick={() => setEditingIndex(null)}
           handleVisibility={() => {}}
-          renderDisplay={(field: Step) => (
+          renderDisplay={(field) => (
             <div className="flex flex-col gap-2 border-ash-200 border p-3 rounded-md">
               {field.icon && <div className="w-8 h-8" dangerouslySetInnerHTML={{ __html: field.icon.svgCode }} />}
               <div className="flex flex-col gap-1">
@@ -149,7 +152,7 @@ export default function OurProcessEditor({ content, onSave, page }: OurProcessEd
               </div>
             </div>
           )}
-          renderEdit={(_: Step, index: number) => (
+          renderEdit={(_field, index) => (
             <>
               <Label>Icon</Label>
               <div className="relative w-fit">

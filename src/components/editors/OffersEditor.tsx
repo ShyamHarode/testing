@@ -18,12 +18,15 @@ import { cn } from "@/lib/utils";
 import type { Page } from "@prisma/client";
 
 interface Offer {
+  id?: string;
   title: string;
   description: string;
   amount: string;
   discountCode: string;
   autoPopup?: boolean;
 }
+
+type OfferField = Offer & { id: string };
 
 interface FormData {
   header: string;
@@ -41,7 +44,7 @@ interface Content {
 
 interface OffersEditorProps {
   content: Content;
-  onSave: (_data: FormData, _options?: { isGlobal?: boolean; sectionType?: string }) => Promise<void>;
+  onSave: (_: FormData, __?: { isGlobal?: boolean; sectionType?: string }) => Promise<void>;
   page: Page;
 }
 
@@ -90,8 +93,9 @@ export default function OffersEditor({ content, onSave, page }: OffersEditorProp
     return form.getValues("offers").some((offer, index) => index !== currentIndex && offer.autoPopup === true);
   };
 
-  const handleSortEnd = (newItems: Offer[]) => {
-    form.setValue("offers", newItems, { shouldDirty: true });
+  const handleSortEnd = (newItems: OfferField[]) => {
+    const withoutIds = newItems.map(({ id: _, ...rest }) => rest);
+    form.setValue("offers", withoutIds, { shouldDirty: true });
   };
 
   return (
@@ -133,9 +137,9 @@ export default function OffersEditor({ content, onSave, page }: OffersEditorProp
           />
         </div>
 
-        <EditorInputList
+        <EditorInputList<OfferField>
           fields={fields}
-          editingIndex={editingIndex as null | undefined}
+          editingIndex={editingIndex}
           setEditingIndex={setEditingIndex}
           remove={remove}
           onXClick={() => {
@@ -147,7 +151,7 @@ export default function OffersEditor({ content, onSave, page }: OffersEditorProp
           listName="Offers"
           onSortEnd={handleSortEnd}
           handleVisibility={() => {}}
-          renderDisplay={(field: Offer) => (
+          renderDisplay={(field, _) => (
             <div className="flex flex-col gap-2 border-ash-200 border p-3 rounded-md">
               <div className="flex flex-col gap-1">
                 <p className="font-bold text-sm">{field.title}</p>
@@ -156,7 +160,7 @@ export default function OffersEditor({ content, onSave, page }: OffersEditorProp
               </div>
             </div>
           )}
-          renderEdit={(_: Offer, index: number) => (
+          renderEdit={(_field, index) => (
             <>
               <EditorInputField
                 condense
