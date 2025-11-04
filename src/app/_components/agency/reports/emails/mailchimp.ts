@@ -9,35 +9,10 @@ export const mailChimpMetricsAgencyRouter = createTRPCRouter({
     .input(
       z.object({
         api_key: z.string(),
-      }),
+      })
     )
     .mutation(async ({ input, ctx }) => {
       const { api_key } = input;
-      const userToken = {
-        api_key: api_key,
-        agency_id: ctx?.session?.user?.agency.id,
-      };
-      try {
-        const requestOptions = {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: env.BACKEND_API_AUTHORIZATION,
-          },
-        };
-        const response = await fetch(
-          `${env.BACKEND_API}api/agency/mailchimp/account/search_history=${userToken.agency_id}&api_key=${userToken.api_key}`,
-          requestOptions,
-        );
-        const data = await response.json();
-        if (!response.ok) {
-          return { dataInserted: "FALSE", message: data };
-        }
-        return data;
-      } catch (error) {
-        Sentry.captureException(error);
-        throw new TRPCClientError(JSON.stringify(error));
-      }
     }),
   createMailchimpEmailMetrics: protectedProcedure
     .input(
@@ -45,7 +20,7 @@ export const mailChimpMetricsAgencyRouter = createTRPCRouter({
         api_key: z.string(),
         from_date: z.string(),
         to_date: z.string(),
-      }),
+      })
     )
     .mutation(async ({ ctx, input }) => {
       const { from_date, to_date, api_key } = input;
@@ -65,7 +40,7 @@ export const mailChimpMetricsAgencyRouter = createTRPCRouter({
       };
       const response = await fetch(
         `${env.BACKEND_API}api/agency/mailchimp/account/campaigns`,
-        requestOptions,
+        requestOptions
       );
       const data = await response.json();
       if (!response.ok) {
@@ -94,7 +69,7 @@ export const mailChimpMetricsAgencyRouter = createTRPCRouter({
         api_key: z.string(),
         from_date: z.string(),
         to_date: z.string(),
-      }),
+      })
     )
     .mutation(async ({ ctx, input }) => {
       const { from_date, to_date, api_key } = input;
@@ -114,7 +89,7 @@ export const mailChimpMetricsAgencyRouter = createTRPCRouter({
       };
       const response = await fetch(
         `${env.BACKEND_API}/api/mailchimp/syncData`,
-        requestOptions,
+        requestOptions
       );
       const data = await response.json();
       if (!response.ok) {
@@ -143,7 +118,7 @@ export const mailChimpMetricsAgencyRouter = createTRPCRouter({
         from_date: z.string(),
         to_date: z.string(),
         page: z.number(),
-      }),
+      })
     )
     .mutation(async ({ ctx, input }) => {
       const { from_date, to_date, connection_id, page } = input;
@@ -199,7 +174,7 @@ export const mailChimpMetricsAgencyRouter = createTRPCRouter({
         from_date: z.string(),
         to_date: z.string(),
         search_text: z.string(),
-      }),
+      })
     )
     .mutation(async ({ ctx, input }) => {
       const { from_date, to_date, api_key, search_text } = input;
@@ -221,7 +196,7 @@ export const mailChimpMetricsAgencyRouter = createTRPCRouter({
 
       const response = await fetch(
         `${env.BACKEND_API}api/agency/mailchimp/account/campaigns/filter_search`,
-        requestOptions,
+        requestOptions
       );
       const data = await response.json();
 
