@@ -32,11 +32,7 @@ export default async function Home() {
 							href="https://create.t3.gg/en/introduction"
 							target="_blank"
 						>
-							<h3 className="font-bold text-2xl">Documentation →</h3>
-							<div className="text-lg">
-								Learn more about Create T3 App, the libraries it uses, and how
-								to deploy it.
-							</div>
+
 						</Link>
 					</div>
 					<div className="flex flex-col items-center gap-2">
