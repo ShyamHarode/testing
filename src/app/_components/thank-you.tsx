@@ -18,6 +18,18 @@ function ThankYouPage() {
           >
             Home
           </Link>
+          <Link
+            href="/"
+            className="flex h-12 w-44 items-center justify-center rounded-md bg-[#E0097A] text-white hover:bg-[#E0097A]/80"
+          >
+            Facebook Ads Migration Report
+          </Link>
+          <Link
+            href="/"
+            className="flex h-12 w-44 items-center justify-center rounded-md bg-[#E0097A] text-white hover:bg-[#E0097A]/80"
+          >
+            Google Ads Migration Report
+          </Link>
         </div>
       </div>
     </ClientLayout>

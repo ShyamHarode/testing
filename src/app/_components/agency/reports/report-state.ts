@@ -44,6 +44,19 @@ export const reportsStateAgencyRouter = createTRPCRouter({
           googleSearchMigrationReport: data,
         },
       });
+    }),     
+    saveFacebookAdsStatus: protectedProcedure
+    .input(MetricsStateInput)
+    .mutation(async ({ ctx, input }) => {
+      const data: MetricsStateInputType["data"] = input.data;
+      await ctx.prisma.client.update({
+        where: {
+          id: input.clientId,
+        },
+        data: {
+          facebookAdsMigrationReport: data,
+        },
+      });
     }),
   saveBingAdsStatus: protectedProcedure
     .input(MetricsStateInput)

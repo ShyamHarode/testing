@@ -3,6 +3,7 @@
 import { useState } from "react";
 
 import { api } from "~/trpc/react";
+import Link from "next/link";
 
 export function LatestPost() {
 	const [latestPost] = api.post.getLatest.useSuspenseQuery();
@@ -21,7 +22,10 @@ export function LatestPost() {
 			{latestPost ? (
 				<p className="truncate">Your most recent post: {latestPost.name}</p>
 			) : (
-				<p>You have no posts yet.</p>
+				<div className="flex flex-col gap-2">
+					<p>You have no posts yet.</p>
+					<Link href="/post/create">Create a post</Link>
+				</div>
 			)}
 			<form
 				onSubmit={(e) => {
