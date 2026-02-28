@@ -8,6 +8,8 @@ function ThankYouPage() {
         <div className="w-[380px]g flex flex-col items-center md:items-start">
           <p className="max-w-2xl font-lato text-6xl font-bold leading-tight text-black">
             Thank You for submitting your details
+            <br />
+            for Facebook Ads Migration Report Request or any other service you may need.
           </p>
           <p className="my-8 max-w-[577px] font-lato text-xl text-[#5B5B5B]">
             We will contact you with the final amount and payment link.

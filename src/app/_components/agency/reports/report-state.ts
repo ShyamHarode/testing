@@ -44,8 +44,8 @@ export const reportsStateAgencyRouter = createTRPCRouter({
           googleSearchMigrationReport: data,
         },
       });
-    }),     
-    saveFacebookAdsStatus: protectedProcedure
+    }),
+  saveFacebookAdsStatus: protectedProcedure
     .input(MetricsStateInput)
     .mutation(async ({ ctx, input }) => {
       const data: MetricsStateInputType["data"] = input.data;
@@ -84,7 +84,33 @@ export const reportsStateAgencyRouter = createTRPCRouter({
         },
       });
     }),
-  saveBingWebmasterStatus: protectedProcedure
+  saveFacebookAdsStatusAgency: protectedProcedure
+    .input(MetricsStateInput)
+    .mutation(async ({ ctx, input }) => {
+      const data: MetricsStateInputType["data"] = input.data;
+      await ctx.prisma.client.update({
+        where: {
+          id: input.clientId,
+        },
+        data: {
+          facebookAdsMigrationReport: data,
+        },
+      });
+    }),
+  saveGoogleAdsStatusAgency: protectedProcedure
+    .input(MetricsStateInput)
+    .mutation(async ({ ctx, input }) => {
+      const data: MetricsStateInputType["data"] = input.data;
+      await ctx.prisma.client.update({
+        where: {
+          id: input.clientId,
+        },
+        data: {
+          googleAdsMigrationReport: data,
+        },
+      });
+    }),
+  saveBingWebmasterStatusAgency: protectedProcedure
     .input(MetricsStateInput)
     .mutation(async ({ ctx, input }) => {
       const data: MetricsStateInputType["data"] = input.data;
@@ -97,7 +123,7 @@ export const reportsStateAgencyRouter = createTRPCRouter({
         },
       });
     }),
-  savefaceBookAdsStatus: protectedProcedure
+  savefaceBookAdsStatusAgency: protectedProcedure
     .input(MetricsStateInput)
     .mutation(async ({ ctx, input }) => {
       const data: MetricsStateInputType["data"] = input.data;
